@@ -14,7 +14,7 @@ public class MaskTimer {
     private static final int ONE_MINUTE_MILLI_SECONDS = 60000;
 
     @Value("${mask.interval.time.unit.minute}")
-    private int INTERVAL_TIME_UNIT_MINUTE;
+    private float INTERVAL_TIME_UNIT_MINUTE;
 
     @Value("${mask.address}")
     private String ADDRESS;
@@ -31,11 +31,14 @@ public class MaskTimer {
     public void start() {
         checkMask("tick=start");
 
-        Flux.interval(Duration.ofMillis(INTERVAL_TIME_UNIT_MINUTE * ONE_MINUTE_MILLI_SECONDS))
+        Flux.interval(Duration.ofMillis((long) (INTERVAL_TIME_UNIT_MINUTE * ONE_MINUTE_MILLI_SECONDS)))
                 .map(input -> "tick=" + input)
                 .retry(1)
                 .elapsed()
-                .subscribe((tuple) -> checkMask(tuple.getT2()), System.err::println);
+                .subscribe(
+                        (tuple) -> checkMask(tuple.getT2()),
+                        (error) -> log.error(error.getMessage())
+                );
     }
 
     private void checkMask(String tick) {
